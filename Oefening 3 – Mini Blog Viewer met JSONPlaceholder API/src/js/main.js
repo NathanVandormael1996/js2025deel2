@@ -5,148 +5,110 @@ import '../scss/styles.scss'
 import * as bootstrap from 'bootstrap'
 
 //eigen js
-document.addEventListener('DOMContentLoaded', () => {
-    const postIdInput = document.getElementById('ex3_post_id');
-    const loadButton = document.getElementById('ex3_btn');
-    const statusDiv = document.getElementById('ex3_status');
-    const postCard = document.getElementById('ex3_post_card');
-    const postTitle = document.getElementById('ex3_title');
-    const postBody = document.getElementById('ex3_body');
-    const commentsCard = document.getElementById('ex3_comments_card');
-    const commentsList = document.getElementById('ex3_comments_list');
-    const commentsEmpty = document.getElementById('ex3_comments_empty');
 
-    // API-basis URL
-    const BASE_URL = 'https://jsonplaceholder.typicode.com';
+const UI = {
+    postIdInput: document.getElementById('ex3_post_id'),
+    loadButton: document.getElementById('ex3_btn'),
+    status: document.getElementById('ex3_status'),
+    postCard: document.getElementById('ex3_post_card'),
+    postTitle: document.getElementById('ex3_title'),
+    postBody: document.getElementById('ex3_body'),
+    commentsCard: document.getElementById('ex3_comments_card'),
+    commentsList: document.getElementById('ex3_comments_list'),
+    commentsEmpty: document.getElementById('ex3_comments_empty')
+};
 
-    /**
-     * Stelt de statusmelding in de UI in.
-     * @param {string} message - De tekst van de melding.
-     * @param {string} type - De alert-klasse (bijv. 'secondary', 'warning', 'success', 'danger').
-     */
-    function setStatus(message, type = 'secondary') {
-        // Reset alle alert-klassen en stel de nieuwe in
-        statusDiv.className = `alert alert-${type} mb-3`;
-        statusDiv.textContent = message;
+const BASE = 'https://jsonplaceholder.typicode.com';
+
+function setStatus(message, type = 'secondary') {
+    UI.status.className = `alert alert-${type} mb-3`;
+    UI.status.textContent = message;
+}
+
+function resetView() {
+    UI.postCard.classList.add('d-none');
+    UI.commentsCard.classList.add('d-none');
+    UI.commentsList.innerHTML = '';
+    UI.commentsEmpty.classList.remove('d-none');
+}
+
+function showPost(post) {
+    UI.postTitle.textContent = post.title;
+    UI.postBody.textContent = post.body;
+    UI.postCard.classList.remove('d-none');
+}
+
+function showComments(comments) {
+    UI.commentsList.innerHTML = '';
+    UI.commentsCard.classList.remove('d-none');
+
+    if (comments.length === 0) {
+        UI.commentsEmpty.classList.remove('d-none');
+        return;
     }
 
-    /**
-     * Verbergt de post- en commentaarsecties.
-     */
-    function hideSections() {
-        postCard.classList.add('d-none');
-        commentsCard.classList.add('d-none');
-        commentsList.innerHTML = ''; // Maak de lijst leeg
-        commentsEmpty.classList.remove('d-none'); // Toon 'Nog geen comments'
+    UI.commentsEmpty.classList.add('d-none');
+
+    const frag = document.createDocumentFragment();
+
+    for (const c of comments) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+            <p class="mb-1"><strong>${c.name}</strong> (${c.email})</p>
+            <p class="mb-0 small">${c.body}</p>
+        `;
+        frag.appendChild(li);
     }
 
-    /**
-     * Haalt een blogpost op via de API.
-     * @param {number} id - De ID van de post.
-     * @returns {Promise<Object>} - De postgegevens.
-     */
-    async function fetchPost(id) {
-        const response = await fetch(`${BASE_URL}/posts/${id}`);
-        if (!response.ok) {
-            // Gooi een error als de status geen 2xx is (bijv. 404)
-            throw new Error(`Post met ID ${id} niet gevonden (Status: ${response.status})`);
-        }
-        return response.json();
+    UI.commentsList.appendChild(frag);
+}
+
+async function fetchJSON(url, errorMsg) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${errorMsg} (status ${res.status})`);
+    return res.json();
+}
+
+async function getPost(id) {
+    return fetchJSON(`${BASE}/posts/${id}`, `Post met ID ${id} niet gevonden`);
+}
+
+async function getComments(id) {
+    return fetchJSON(`${BASE}/comments?postId=${id}`, `Comments konden niet geladen worden`);
+}
+
+// ------------------------------------
+// Main controller
+// ------------------------------------
+async function loadPostAndComments() {
+    const raw = UI.postIdInput.value.trim();
+    const postId = Number(raw);
+
+    if (!raw || !Number.isInteger(postId) || postId < 1) {
+        setStatus('❌ Gelieve een geldig post ID in te vullen.', 'danger');
+        resetView();
+        return;
     }
 
-    /**
-     * Haalt de comments voor een post op via de API.
-     * @param {number} postId - De ID van de post.
-     * @returns {Promise<Array<Object>>} - De lijst met comments.
-     */
-    async function fetchComments(postId) {
-        const response = await fetch(`${BASE_URL}/comments?postId=${postId}`);
-        if (!response.ok) {
-            throw new Error(`Fout bij het ophalen van comments (Status: ${response.status})`);
-        }
-        return response.json();
+    resetView();
+    setStatus('🟡 Bezig met laden...', 'warning');
+
+    try {
+        const [post, comments] = await Promise.all([
+            getPost(postId),
+            getComments(postId)
+        ]);
+
+        showPost(post);
+        showComments(comments);
+
+        setStatus(`✅ Post #${postId} succesvol geladen! (${comments.length} comments)`, 'success');
+    } catch (err) {
+        console.error(err);
+        setStatus(`🔴 Fout: ${err.message}`, 'danger');
+        resetView();
     }
+}
 
-    /**
-     * Toont de postgegevens in de UI.
-     * @param {Object} post - Het postobject.
-     */
-    function displayPost(post) {
-        postTitle.textContent = post.title;
-        postBody.textContent = post.body;
-        postCard.classList.remove('d-none');
-    }
-
-    /**
-     * Toont de comments in de UI.
-     * @param {Array<Object>} comments - De lijst met commentobjecten.
-     */
-    function displayComments(comments) {
-        commentsList.innerHTML = ''; // Zorg ervoor dat de lijst leeg is
-        commentsCard.classList.remove('d-none');
-
-        if (comments.length === 0) {
-            commentsEmpty.classList.remove('d-none');
-            return;
-        }
-
-        commentsEmpty.classList.add('d-none'); // Verberg de 'Geen comments' melding
-
-        comments.forEach(comment => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            // Gebruik Markdown/HTML in de li voor de opmaak
-            li.innerHTML = `
-                <p class="mb-1"><strong>${comment.name}</strong> (${comment.email})</p>
-                <p class="mb-0 small">${comment.body}</p>
-            `;
-            commentsList.appendChild(li);
-        });
-    }
-
-    /**
-     * De hoofdfunctie die wordt uitgevoerd bij het klikken op de knop.
-     */
-    async function loadPostAndComments() {
-        const postIdValue = postIdInput.value.trim();
-        const postId = parseInt(postIdValue, 10);
-
-        // 1. Validatie
-        if (!postIdValue || isNaN(postId) || postId < 1) {
-            setStatus('❌ Gelieve een geldig Post ID (een getal groter dan 0) in te vullen.', 'danger');
-            hideSections();
-            return;
-        }
-
-        // Reset UI en toon laadstatus
-        hideSections();
-        setStatus('🟡 Bezig met laden van post en comments...', 'warning');
-
-        try {
-            // Gebruik Promise.all om de post en de comments tegelijkertijd op te halen
-            // dit maakt de applicatie sneller!
-            const [post, comments] = await Promise.all([
-                fetchPost(postId),
-                fetchComments(postId)
-            ]);
-
-            // 3. Toon Post
-            displayPost(post);
-
-            // 4. Toon Comments
-            displayComments(comments);
-
-            // 5. Succesmelding
-            setStatus(`✅ Post #${postId} en ${comments.length} comments succesvol geladen!`, 'success');
-
-        } catch (error) {
-            // Vang fouten op van zowel fetchPost als fetchComments
-            console.error('Laadfout:', error);
-            setStatus(`🔴 Fout bij het laden: ${error.message}`, 'danger');
-            hideSections(); // Zorg ervoor dat bij fout de secties verborgen zijn
-        }
-    }
-
-    // Event Listener voor de knop
-    loadButton.addEventListener('click', loadPostAndComments);
-});
+UI.loadButton.addEventListener('click', loadPostAndComments);
