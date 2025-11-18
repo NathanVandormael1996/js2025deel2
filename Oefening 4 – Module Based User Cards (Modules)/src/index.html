@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>smoke test</title>
+    <script src="./js/main.js" type="module"></script>
+</head>
+<body>
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-secondary text-white">
+        Oefening 4 - Module Based User Cards (Modules) - MET AI
+    </div>
+    <div class="card-body">
+        <p class="small text-muted">
+            Gebruik ES Modules: bouw een User class, een userCard component
+            en beheer de UI via een main.js module.
+        </p>
+        <div class="row g-2 mb-3">
+            <div class="col-md-6">
+                <input id="ex4_name" class="form-control" placeholder="Naam">
+            </div>
+            <div class="col-md-4">
+                <input id="ex4_age" type="number" class="form-control"
+                       placeholder="Leeftijd">
+            </div>
+            <div class="col-md-2">
+                <button id="ex4_btn" class="btn btn-secondary w-100">Voeg
+                    toe</button>
+            </div>
+        </div>
+        <div id="ex4_status" class="alert alert-secondary mb-3">
+            Nog geen gebruikers toegevoegd.
+        </div>
+        <ul id="ex4_list" class="list-group"></ul>
+    </div>
+</div>
+</body>
+</html>

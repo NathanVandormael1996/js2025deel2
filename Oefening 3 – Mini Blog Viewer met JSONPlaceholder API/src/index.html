@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>smoke test</title>
+    <script src="./js/main.js" type="module"></script>
+</head>
+<body>
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-info text-white">
+        Oefening 3 - Mini Blog Viewer (API, Async) - MET AI
+    </div>
+    <div class="card-body">
+        <p class="small text-muted">
+            Gebruik de JSONPlaceholder API om een blogpost en bijhorende comments
+            op te halen.
+            Je laadt een post op basis van een ID en toont de gegevens hieronder.
+        </p>
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <input
+                        class="form-control"
+                        id="ex3_post_id"
+                        min="1"
+                        placeholder="Post ID (bv. 1)"
+                        type="number">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-info w-100" id="ex3_btn">
+                    Laad post
+                </button>
+            </div>
+        </div>
+        <div class="alert alert-secondary mb-3" id="ex3_status">
+            Vul een post ID in en klik op "Laad post".
+        </div>
+        <div class="card d-none mb-3" id="ex3_post_card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0" id="ex3_title"></h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" id="ex3_body"></p>
+            </div>
+        </div>
+        <div class="card d-none" id="ex3_comments_card">
+            <div class="card-header bg-light">
+                Comments
+            </div>
+            <div class="card-body">
+                <ul class="list-group mb-2" id="ex3_comments_list"></ul>
+                <div class="text-muted small" id="ex3_comments_empty">
+                    Nog geen comments geladen.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
